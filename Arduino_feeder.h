@@ -22,12 +22,12 @@
 #define RAD2DEG(x)                       (x * 57.2957795131)  // *180/PI
 
 // define PWM pins
-#define PWM_PIN_PUMP                     3  // paint pump pin
-#define PWM_PIN_BUFFER                   6  // buffer pin
-#define BUFFER_OFF_FILTER                3  // [seconds]
-#define PUMP_IGNITION_TIME               5  // [seconds]
-#define PUMP_CYCLE_ON_TIME               2  // [seconds]
-#define PUMP_CYCLE_OFF_TIME              3  // [seconds] 
+//#define PWM_PIN_PUMP                     3  // paint pump pin
+//#define PWM_PIN_BUFFER                   6  // buffer pin
+//#define BUFFER_OFF_FILTER                3  // [seconds]
+//#define PUMP_IGNITION_TIME               5  // [seconds]
+//#define PUMP_CYCLE_ON_TIME               2  // [seconds]
+//#define PUMP_CYCLE_OFF_TIME              3  // [seconds] 
 
 // define HVLP sensor initial angles
 #define HVLP_CLOSE_POS                   (uint32_t)120 // closed position angle (deg)
@@ -46,7 +46,7 @@ static uint32_t tTime[10];
 #define LCD_D6        6
 #define LCD_D7        7
 
-#define MOTOR_ODOMETRY 2
+#define MOTOR_ODOMETRY 1
 #define MOTOR_PWMF 11
 #define MOTOR_PWMR 3
 
@@ -59,7 +59,7 @@ float calculateVelocity(void);
 void menu_handler(void);
 
 /*******************************************************************************
-* Declaration for GUI
+* Declaration for GUI & menu
 *******************************************************************************/
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // initialize the library with the numbers of the interface pins

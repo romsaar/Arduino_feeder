@@ -5,10 +5,11 @@ void setup() {
   char my_str[16] = "Motor Vel =    "; // starts at 0
 
    // setup right wheel pins 
-  pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 9 an input (odometry)  
+  pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 1 an input (odometry)  
+  //digitalWrite(MOTOR_ODOMETRY, INPUT_PULLDOWN); // Configure odometry as pull_down
   pinMode(MOTOR_PWMF,OUTPUT); // make pin 11 an output (PWM forward)
   pinMode(MOTOR_PWMR,OUTPUT); // make pin 3 an output (PWM reverse)
-    
+     
   Serial.begin(9600);
   
   //set PWM frequency to 3906 Hz for pin 3 (and 11)
@@ -43,20 +44,30 @@ void loop()
 
   // Poll motor odometry
   current_velocity = calculateVelocity();
-  
+
+  // Poll buttons
+  menu_handler();
+    
   // Call RPM controller
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
   {      
     tTime[0] = t;
-  }
-
-  menu_handler();
-  
+  }  
 }
 
 /*******************************************************************************
 * Menu handler
-* Menu places: 0=required velocity, 1=Open angle, 2=Close angle, 3=servo_delay
+* Buttons:
+*           Up - scrolls up the menu
+*           Down - scrolls down the menu
+*           Right - increment current menu place
+*           Left - decrement current menu place
+*           Select - Start/Stop*           
+* Menu places: 
+*           0=required velocity
+*           1=Open angle
+*           2=Close angle
+*           3=servo_delay
 *******************************************************************************/
 
 void menu_handler()
@@ -94,8 +105,9 @@ void menu_handler()
   }
 }
 
- 
-
+/*******************************************************************************
+* Calculate Velocity
+*******************************************************************************/ 
 
 float calculateVelocity()
 {  
@@ -109,9 +121,14 @@ float calculateVelocity()
   
   // Detect tranbsition and update odometry counter
   if(motor_pulses==0 && prev_motor_pulses== 1 )  //the point where high goes to low(end of the pulse) 
+  {
     motor_odo_counter = motor_odo_counter + 1;
+    Serial.print(motor_odo_counter);
+  }
   // Update prev motor pulses
   prev_motor_pulses=motor_pulses;
+
+  
   
   if(motor_odo_counter>=82)
   {    
