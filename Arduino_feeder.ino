@@ -89,29 +89,67 @@ void menu_handler()
     }
     else
     {
+      // New button was pressed
       is_pressed = true;
       Serial.print("The value at pim A0 is  :");
-      Serial.println(x,DEC);      
+      Serial.println(x,DEC);
+
+      // Pressed button logic
       if (x < 100) {
-        lcd.print ("Right ");  
-      }
+        // Right button - increase the relevant menu place value
+        //lcd.print ("Right ");  
+        switch (menu_place_id) {
+          case MENU_REQ_VELOCITY:
+            req_velocity = min(req_velocity+REQ_VEL_STEP, MAX_REQ_VEL);
+            break;
+          case MENU_OPEN_ANGLE:
+            open_angle = min(open_angle+HVLP_ANGLE_STEP, HVLP_MAX);
+            break;
+          case MENU_CLOSE_ANGLE:
+            close_angle = min(close_angle+HVLP_ANGLE_STEP, HVLP_MAX);
+            break;
+          case MENU_SERVO_DELAY:
+            servo_delay = min(servo_delay+SERVO_DELAY_STEP,MAX_SERVO_DELAY);
+            break;
+          default:
+            // statements
+            break;
+        }
+      } 
       else if (x < 200) {
-        // Up button
+        // Up button - update the menu place
         menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
-        lcd.print (menu_place_id);
-      }
-      
+        //lcd.print(menu_place_id);
+      }      
       else if (x < 400){
-        // Down button
+        // Down button- update the menu place
         menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
         if (menu_place_id<0)
           menu_place_id += MAX_MENU_PLACES;
-        lcd.print (menu_place_id);
+        //lcd.print (menu_place_id);
       }
       else if (x < 600){
-        lcd.print ("Left  ");
+        // Left button - decrease the relevant menu place value
+        switch (menu_place_id) {
+          case MENU_REQ_VELOCITY:
+            req_velocity = max(req_velocity-REQ_VEL_STEP, 0);
+            break;
+          case MENU_OPEN_ANGLE:
+            open_angle = max(open_angle-HVLP_ANGLE_STEP, HVLP_MIN);
+            break;
+          case MENU_CLOSE_ANGLE:
+            close_angle = max(close_angle-HVLP_ANGLE_STEP, HVLP_MIN);
+            break;
+          case MENU_SERVO_DELAY:
+            servo_delay = max(servo_delay-SERVO_DELAY_STEP,0);
+            break;
+          default:
+            // statements
+            break;
+        }
       }
       else if (x < 800){
+        // Select button - start/stop
         lcd.print ("Select");
       }
     }    

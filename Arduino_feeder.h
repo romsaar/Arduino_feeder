@@ -21,11 +21,17 @@
 #define DEG2RAD(x)                       (x * 0.01745329252)  // *PI/180
 #define RAD2DEG(x)                       (x * 57.2957795131)  // *180/PI
 
+#define MAX_REQ_VEL             25
+#define REQ_VEL_STEP            1
+#define MAX_SERVO_DELAY         2000
+#define SERVO_DELAY_STEP        200
+
 // define HVLP sensor initial angles
 #define HVLP_CLOSE_POS                   (uint32_t)120 // closed position angle (deg)
 #define HVLP_OPEN_POS                    (uint32_t)80 // open position angle (deg) - corresponds to 180deg
 #define HVLP_MAX                         (uint32_t)170
 #define HVLP_MIN                         (uint32_t)30
+#define HVLP_ANGLE_STEP                   5 
 
 // GUI paramete constants
 #define MENU_REQ_VELOCITY        0
@@ -66,6 +72,10 @@ void menu_handler(void);
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // initialize the library with the numbers of the interface pins
 int menu_place_id = MENU_REQ_VELOCITY;
 bool is_pressed = false;
+int req_velocity = 20;
+int open_angle = HVLP_OPEN_POS;
+int close_angle = HVLP_CLOSE_POS;
+int servo_delay = 0;
 
 /*******************************************************************************
 * Declaration for velocity measurement
