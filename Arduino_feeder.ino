@@ -75,34 +75,92 @@ void menu_handler()
   int x;
   x = analogRead (0);
   lcd.setCursor(10,1);
+
+  if (x>=800)
+  {
+    // No button is pressed
+    is_pressed = false;
+  }
+  else
+  {
+    if (is_pressed)
+    {
+      // wait for the button to be released
+    }
+    else
+    {
+      is_pressed = true;
+      Serial.print("The value at pim A0 is  :");
+      Serial.println(x,DEC);      
+      if (x < 100) {
+        lcd.print ("Right ");  
+      }
+      else if (x < 200) {
+        // Up button
+        menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
+        lcd.print (menu_place_id);
+      }
+      
+      else if (x < 400){
+        // Down button
+        menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
+        if (menu_place_id<0)
+          menu_place_id += MAX_MENU_PLACES;
+        lcd.print (menu_place_id);
+      }
+      else if (x < 600){
+        lcd.print ("Left  ");
+      }
+      else if (x < 800){
+        lcd.print ("Select");
+      }
+    }    
+  }
+  
  
+  /*
   if (x < 100) 
   {
     lcd.print ("Right ");
     Serial.print("The value at pim A0 Right key pressed is  :");
     Serial.println(x,DEC);
+    is_pressed = true;
   }
   else if (x < 200) {
-    lcd.print ("Up    ");
+    // Up button
+    menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
+    lcd.print (menu_place_id);
+    //lcd.print ("Up    ");
     Serial.print("The value at pim A0 UP key pressed is  :");
     Serial.println(x,DEC);
+    is_pressed = true;
   }
   
   else if (x < 400){
-    lcd.print ("Down  ");
+    // Down button
+    menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
+    lcd.print (menu_place_id);
+    //lcd.print ("Down  ");
     Serial.print("The value at pim A0 Down key pressed is  :");
     Serial.println(x,DEC);
+    is_pressed = true;
   }
   else if (x < 600){
     lcd.print ("Left  ");
     Serial.print("The value at pim A0 Left key pressed is  :");
     Serial.println(x,DEC);
+    is_pressed = true;
   }
   else if (x < 800){
     lcd.print ("Select");
     Serial.print("The value at pim A0 Select key pressed is  :");
     Serial.println(x,DEC);
+    is_pressed = true;
   }
+  else {
+    is_pressed = false;
+  }
+  */
 }
 
 /*******************************************************************************
@@ -123,7 +181,7 @@ float calculateVelocity()
   if(motor_pulses==0 && prev_motor_pulses== 1 )  //the point where high goes to low(end of the pulse) 
   {
     motor_odo_counter = motor_odo_counter + 1;
-    Serial.print(motor_odo_counter);
+    //Serial.print(motor_odo_counter);
   }
   // Update prev motor pulses
   prev_motor_pulses=motor_pulses;
@@ -141,10 +199,11 @@ float calculateVelocity()
     motor_prev_time = current_time;
     motor_odo_counter=0;
     
-    Serial.print("rpm: ");
+    /*Serial.print("rpm: ");
     Serial.println(motor_rpm);    
     Serial.print("mm/s of right wheel:");
     Serial.println(motor_velocity);
+    */
   } 
 
   return motor_velocity;

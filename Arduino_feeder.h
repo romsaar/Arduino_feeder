@@ -21,17 +21,18 @@
 #define DEG2RAD(x)                       (x * 0.01745329252)  // *PI/180
 #define RAD2DEG(x)                       (x * 57.2957795131)  // *180/PI
 
-// define PWM pins
-//#define PWM_PIN_PUMP                     3  // paint pump pin
-//#define PWM_PIN_BUFFER                   6  // buffer pin
-//#define BUFFER_OFF_FILTER                3  // [seconds]
-//#define PUMP_IGNITION_TIME               5  // [seconds]
-//#define PUMP_CYCLE_ON_TIME               2  // [seconds]
-//#define PUMP_CYCLE_OFF_TIME              3  // [seconds] 
-
 // define HVLP sensor initial angles
 #define HVLP_CLOSE_POS                   (uint32_t)120 // closed position angle (deg)
 #define HVLP_OPEN_POS                    (uint32_t)80 // open position angle (deg) - corresponds to 180deg
+#define HVLP_MAX                         (uint32_t)170
+#define HVLP_MIN                         (uint32_t)30
+
+// GUI paramete constants
+#define MENU_REQ_VELOCITY        0
+#define MENU_OPEN_ANGLE          1
+#define MENU_CLOSE_ANGLE         2
+#define MENU_SERVO_DELAY         3
+#define MAX_MENU_PLACES          4
 
 /*******************************************************************************
 * SoftwareTimer
@@ -63,7 +64,8 @@ void menu_handler(void);
 *******************************************************************************/
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // initialize the library with the numbers of the interface pins
-int display_id = 0;
+int menu_place_id = MENU_REQ_VELOCITY;
+bool is_pressed = false;
 
 /*******************************************************************************
 * Declaration for velocity measurement
