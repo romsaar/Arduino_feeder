@@ -2,6 +2,8 @@
 
 void setup() {
 
+  char my_str[16] = "Motor Vel =    "; // starts at 0
+
    // setup right wheel pins 
   pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 9 an input (odometry)  
   pinMode(MOTOR_PWMF,OUTPUT); // make pin 11 an output (PWM forward)
@@ -17,14 +19,22 @@ void setup() {
 
   // Setup the LCD  
   lcd.begin(16, 2);
-  // Print a message to the LCD.
+  // Print a message to the LCD.  
   lcd.setCursor(0,0);
-  lcd.print("Motor Vel = 0");  
+  my_str[12] = '0';
+  my_str[13] = '.';
+  my_str[14] = '0';
+  //lcd.print("Motor Vel = 0"); 
+  lcd.print(my_str); 
   lcd.setCursor(0,1);
   lcd.print("Set Req vel:");
   Serial.begin(9600);
  
 }
+
+/*******************************************************************************
+* Loop function
+*******************************************************************************/
 
 void loop() 
 {
@@ -44,9 +54,14 @@ void loop()
   
 }
 
+/*******************************************************************************
+* Menu handler
+* Menu places: 0=required velocity, 1=Open angle, 2=Close angle, 3=servo_delay
+*******************************************************************************/
+
 void menu_handler()
 {
-   int x;
+  int x;
   x = analogRead (0);
   lcd.setCursor(10,1);
  

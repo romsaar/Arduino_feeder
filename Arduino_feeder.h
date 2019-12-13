@@ -9,8 +9,8 @@
 #define FEEDER_CONFIG_H_
 
 #include <Servo.h>
-#include <math.h>
 #include <LiquidCrystal.h>
+//#include <math.h>
 
 // Firmware version
 #define FIRMWARE_VER "0.0.1"
@@ -63,7 +63,6 @@ void menu_handler(void);
 *******************************************************************************/
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // initialize the library with the numbers of the interface pins
-char hello[13] = "hello world!";
 int display_id = 0;
 
 /*******************************************************************************
@@ -75,8 +74,7 @@ int motor_odo_counter = 0;
 float motor_prev_time =0;
 float motor_time_taken=0;
 float motor_rpm=0;
-float motor_velocity;
-
+float motor_velocity = 0;
 
 /*******************************************************************************
 * Declaration for HVLP servo
