@@ -26,14 +26,14 @@
 #define MAX_SERVO_DELAY         2000
 #define SERVO_DELAY_STEP        200
 
-// define HVLP sensor initial angles
+// HVLP parameters
 #define HVLP_CLOSE_POS                   (uint32_t)120 // closed position angle (deg)
 #define HVLP_OPEN_POS                    (uint32_t)80 // open position angle (deg) - corresponds to 180deg
 #define HVLP_MAX                         (uint32_t)170
 #define HVLP_MIN                         (uint32_t)30
 #define HVLP_ANGLE_STEP                   5 
 
-// GUI paramete constants
+// Menu places
 #define MENU_REQ_VELOCITY        0
 #define MENU_OPEN_ANGLE          1
 #define MENU_CLOSE_ANGLE         2
@@ -42,9 +42,17 @@
 #define MENU_FEEDER_EN           5
 #define MAX_MENU_PLACES          6
 
+// Buttons
+#define NO_BUTTON                0
+#define RIGHT_BUTTON             1
+#define LEFT_BUTTON              2
+#define UP_BUTTON                3
+#define DOWN_BUTTON              4
+#define SELECT_BUTTON            5
+
 // Feeder modes
-#define FEEDER_IDLE             0
-#define FEEDER_ON               1
+#define FEEDER_IDLE              0
+#define FEEDER_ON                1
 
 /*******************************************************************************
 * SoftwareTimer
@@ -69,10 +77,11 @@ static uint32_t tTime[10];
 
 // Function prototypes
 float calculateVelocity(void);
-void menu_handler_idle(void);
 void menu_handler_on(int velocity);
 void print_idle_screen(void); 
 void print_on_screen(void); 
+void get_button(void);
+void menu_handler(void);
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -80,11 +89,9 @@ void print_on_screen(void);
 //LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_D4, LCD_D5, LCD_D6, LCD_D7); // initialize the library with the numbers of the interface pins
 int menu_place_id = MENU_REQ_VELOCITY;
-bool is_pressed = false;
-int req_velocity = 20;
-int open_angle = HVLP_OPEN_POS;
-int close_angle = HVLP_CLOSE_POS;
-int servo_delay = 0;
+int current_button = NO_BUTTON;
+
+bool is_pressed = false;            // remove this parameter !!!!!!!!!!!!!!!!!!!!!!
 
 /*******************************************************************************
 * Declaration for velocity measurement
@@ -110,7 +117,10 @@ int32_t hvlp_open_angle = HVLP_CLOSE_POS;
 /*******************************************************************************
 * Declaration for jig parameters
 *******************************************************************************/
-int required_velocity = 20; // [cm/sec]
-int feeder_mode = FEEDER_IDLE;
-bool is_feeder_enabled = true;
-bool is_hvlp_enabled = true;
+int feeder_mode = FEEDER_IDLE;      // Feeder starts in idle mode
+int req_velocity = 20;              // required feeder velocity [cm/sec]
+int open_angle = HVLP_OPEN_POS;     // HVLP active position
+int close_angle = HVLP_CLOSE_POS;   // HVLP idle position
+int servo_delay = 1000;             // wait 1000ms brfore activating the HVLP
+bool is_feeder_enabled = true;      // Feeder is enabled 
+bool is_hvlp_enabled = true;        // HVLP is enabled

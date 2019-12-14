@@ -45,15 +45,17 @@ void loop()
   }  
 
   // Handle GUI
-  if (feeder_mode == FEEDER_IDLE)
+  menu_handler();
+  
+  /*if (feeder_mode == FEEDER_IDLE)
     menu_handler_idle();
   else
-    menu_handler_on(int(current_velocity));     
+    menu_handler_on(int(current_velocity));     */
   
 }
 
 /*******************************************************************************
-* Menu handler during idle mode
+* Menu handler
 * Buttons:
 *           Right - scrolls right the menu
 *           Left - scrolls left the menu
@@ -69,41 +71,31 @@ void loop()
 *           5=Feeder enable
 *******************************************************************************/
 
-void menu_handler_idle()
+void menu_handler()
 {
-  int x;
-  x = analogRead (0);
-  lcd.setCursor(10,1);
+  // poll the buttons
+  get_button();
 
-  if (x>=800)
+  if (current_button != NO_BUTTON)
   {
-    // No button is pressed
-    is_pressed = false;
-  }
-  else
-  {
-    if (is_pressed)
-    {
-      // wait for the button to be released
-    }
-    else
-    {
-      // New button was pressed
-      is_pressed = true;
-      Serial.print("The value at pim A0 is  :");
-      Serial.println(x,DEC);
-      lcd.setCursor(0,1);
-      lcd.print("               ");
+    // handle pressed button
+    lcd.setCursor(0,1);
+    lcd.print("               ");
 
-      // Pressed button logic
-      if (x < 100) {
-        // Right button - update the menu place
-        //lcd.print ("Right ");
+    switch (current_button) {
+      case RIGHT_BUTTON:
+        // handle right button - update the menu place       
         menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
-        //lcd.print(menu_place_id);
-        
-      } 
-      else if (x < 200) {
+        //lcd.print ("Right ");
+        break;
+      case LEFT_BUTTON:
+        // Left button - update the menu place
+        menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
+        if (menu_place_id<0)
+          menu_place_id += MAX_MENU_PLACES;
+        //lcd.print (menu_place_id);
+        break;
+      case UP_BUTTON:
         // Up button - increase/toggle the relevant menu place value
         switch (menu_place_id) {
           case MENU_REQ_VELOCITY:
@@ -128,8 +120,8 @@ void menu_handler_idle()
             // statements
             break;
         }        
-      }      
-      else if (x < 400){
+        break;
+      case DOWN_BUTTON:
         // Down button - decrease/toggle the relevant menu place value  
         switch (menu_place_id) {
           case MENU_REQ_VELOCITY:
@@ -154,71 +146,64 @@ void menu_handler_idle()
             // statements
             break;
         }   
-      }
-      else if (x < 600){
-        // Left button - update the menu place
-        menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
-        if (menu_place_id<0)
-          menu_place_id += MAX_MENU_PLACES;
-        //lcd.print (menu_place_id);
-      }
-      else if (x < 800){
+        break;
+      case SELECT_BUTTON:
         // Select button - start/stop        
         feeder_mode = FEEDER_ON;        
         // On mode display 
         lcd.setCursor(0,1);
-        lcd.print ("Start!");
-        return;
-      }
+        lcd.print ("Start!");        
+        break;          
+      default:
+        // statements
+        break;
+    }
 
-      // Handle the new display
-      lcd.setCursor(0,1);
-      switch (menu_place_id) {
-          case MENU_REQ_VELOCITY:
-            lcd.print ("Vel = ");
-            lcd.print (req_velocity);
-            lcd.print (" cm/s");
-            break;
-          case MENU_OPEN_ANGLE:
-            lcd.print ("Open = ");
-            lcd.print (open_angle);
-            lcd.print (" deg");
-            break;
-          case MENU_CLOSE_ANGLE:
-            lcd.print ("Close = ");
-            lcd.print (close_angle);
-            lcd.print (" deg");
-            break;
-          case MENU_SERVO_DELAY:
-            lcd.print ("Delay = ");
-            lcd.print (servo_delay);
-            lcd.print (" ms");
-            break;
-          case MENU_HVLP_EN:
-            if (is_hvlp_enabled)
-              lcd.print("HVLP enabled");
-             else
-              lcd.print("HVLP disabled");
-            break;
-          case MENU_FEEDER_EN:
-            if (is_feeder_enabled)
-              lcd.print("Feeder enabled");
-             else
-              lcd.print("Feeder disabled");
-            break;       
-          default:
-            // statements
-            break;
-        }      
-    }    
+    // reset current button
+    current_button = NO_BUTTON;    
+
+    // Handle the new display
+    lcd.setCursor(0,1);
+    switch (menu_place_id) {
+        case MENU_REQ_VELOCITY:
+          lcd.print ("Vel = ");
+          lcd.print (req_velocity);
+          lcd.print (" cm/s");
+          break;
+        case MENU_OPEN_ANGLE:
+          lcd.print ("Open = ");
+          lcd.print (open_angle);
+          lcd.print (" deg");
+          break;
+        case MENU_CLOSE_ANGLE:
+          lcd.print ("Close = ");
+          lcd.print (close_angle);
+          lcd.print (" deg");
+          break;
+        case MENU_SERVO_DELAY:
+          lcd.print ("Delay = ");
+          lcd.print (servo_delay);
+          lcd.print (" ms");
+          break;
+        case MENU_HVLP_EN:
+          if (is_hvlp_enabled)
+            lcd.print("HVLP enabled");
+           else
+            lcd.print("HVLP disabled");
+          break;
+        case MENU_FEEDER_EN:
+          if (is_feeder_enabled)
+            lcd.print("Feeder enabled");
+           else
+            lcd.print("Feeder disabled");
+          break;       
+        default:
+          // statements
+          break;
+      }       
   }
 }
 
-/*******************************************************************************
-* Menu handler during On mode
-* Buttons:
-*           Up/Down/Right/Left/Select - transition to idle mode        
-*******************************************************************************/
 
 void menu_handler_on(int velocity)
 {
@@ -255,6 +240,10 @@ void menu_handler_on(int velocity)
    }  
 }
 
+/*******************************************************************************
+* print idle screen
+*******************************************************************************/
+
 void print_idle_screen()
 {  
   lcd.setCursor(0,0); 
@@ -264,6 +253,58 @@ void print_idle_screen()
   lcd.print (req_velocity);
   lcd.print (" cm/s");
 }
+
+
+/*******************************************************************************
+* Get button
+*   Indicates if a new button was pressed (right after the button was released)
+*   The using function is expected to set current_button to NO_BUTTON
+*******************************************************************************/
+void get_button() 
+{
+  
+  static bool is_pressed_internal = false;
+  static int last_button = NO_BUTTON;
+  int x;
+
+  // sample button analog pin
+  x = analogRead (0); 
+
+  if (is_pressed_internal)
+  {
+    // Wait for button release
+    if (x>=800)
+    {
+      // button release - update current button
+      current_button = last_button;
+      last_button = NO_BUTTON;
+      is_pressed_internal = false;     
+    }
+  }
+  else // check if new button is pressed
+  {     
+    if (x<100)
+      // Right button
+      last_button = RIGHT_BUTTON;
+    else if (x < 200)
+      // Up button 
+      last_button = UP_BUTTON;
+    else if (x<400)
+      // Down button
+      last_button = DOWN_BUTTON;
+    else if (x<600)
+      // Left button
+      last_button = LEFT_BUTTON;
+    else if (x<800)
+      // Select button
+      last_button = SELECT_BUTTON;
+
+     // indicate a button is pressed
+     if (last_button > 0)
+      is_pressed_internal = true;
+  }
+}
+
 
 /*******************************************************************************
 * Calculate Velocity
