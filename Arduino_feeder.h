@@ -38,7 +38,13 @@
 #define MENU_OPEN_ANGLE          1
 #define MENU_CLOSE_ANGLE         2
 #define MENU_SERVO_DELAY         3
-#define MAX_MENU_PLACES          4
+#define MENU_HVLP_EN             4
+#define MENU_FEEDER_EN           5
+#define MAX_MENU_PLACES          6
+
+// Feeder modes
+#define FEEDER_IDLE             0
+#define FEEDER_ON               1
 
 /*******************************************************************************
 * SoftwareTimer
@@ -63,7 +69,10 @@ static uint32_t tTime[10];
 
 // Function prototypes
 float calculateVelocity(void);
-void menu_handler(void);
+void menu_handler_idle(void);
+void menu_handler_on(int velocity);
+void print_idle_screen(void); 
+void print_on_screen(void); 
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -102,3 +111,6 @@ int32_t hvlp_open_angle = HVLP_CLOSE_POS;
 * Declaration for jig parameters
 *******************************************************************************/
 int required_velocity = 20; // [cm/sec]
+int feeder_mode = FEEDER_IDLE;
+bool is_feeder_enabled = true;
+bool is_hvlp_enabled = true;

@@ -2,8 +2,6 @@
 
 void setup() {
 
-  char my_str[16] = "Motor Vel =    "; // starts at 0
-
    // setup right wheel pins 
   pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 1 an input (odometry)  
   //digitalWrite(MOTOR_ODOMETRY, INPUT_PULLDOWN); // Configure odometry as pull_down
@@ -20,15 +18,10 @@ void setup() {
 
   // Setup the LCD  
   lcd.begin(16, 2);
-  // Print a message to the LCD.  
-  lcd.setCursor(0,0);
-  my_str[12] = '0';
-  my_str[13] = '.';
-  my_str[14] = '0';
-  //lcd.print("Motor Vel = 0"); 
-  lcd.print(my_str); 
-  lcd.setCursor(0,1);
-  lcd.print("Set Req vel:");
+  
+  // Print a message to the LCD 
+  print_idle_screen(); 
+  
   Serial.begin(9600);
  
 }
@@ -45,24 +38,28 @@ void loop()
   // Poll motor odometry
   current_velocity = calculateVelocity();
 
-  // Poll buttons
-  menu_handler();
-    
   // Call RPM controller
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
   {      
     tTime[0] = t;
   }  
+
+  // Handle GUI
+  if (feeder_mode == FEEDER_IDLE)
+    menu_handler_idle();
+  else
+    menu_handler_on(int(current_velocity));     
+  
 }
 
 /*******************************************************************************
-* Menu handler
+* Menu handler during idle mode
 * Buttons:
 *           Up - scrolls up the menu
 *           Down - scrolls down the menu
 *           Right - increment current menu place
 *           Left - decrement current menu place
-*           Select - Start/Stop*           
+*           Select - transiotion to On mode           
 * Menu places: 
 *           0=required velocity
 *           1=Open angle
@@ -70,7 +67,7 @@ void loop()
 *           3=servo_delay
 *******************************************************************************/
 
-void menu_handler()
+void menu_handler_idle()
 {
   int x;
   x = analogRead (0);
@@ -93,6 +90,8 @@ void menu_handler()
       is_pressed = true;
       Serial.print("The value at pim A0 is  :");
       Serial.println(x,DEC);
+      lcd.setCursor(0,1);
+      lcd.print("               ");
 
       // Pressed button logic
       if (x < 100) {
@@ -111,6 +110,12 @@ void menu_handler()
           case MENU_SERVO_DELAY:
             servo_delay = min(servo_delay+SERVO_DELAY_STEP,MAX_SERVO_DELAY);
             break;
+          case MENU_HVLP_EN:
+           is_hvlp_enabled = not(is_hvlp_enabled);
+            break;
+          case MENU_FEEDER_EN:
+            is_feeder_enabled = not(is_feeder_enabled);
+            break;          
           default:
             // statements
             break;
@@ -143,62 +148,118 @@ void menu_handler()
           case MENU_SERVO_DELAY:
             servo_delay = max(servo_delay-SERVO_DELAY_STEP,0);
             break;
+          case MENU_HVLP_EN:
+           is_hvlp_enabled = not(is_hvlp_enabled);
+            break;
+          case MENU_FEEDER_EN:
+            is_feeder_enabled = not(is_feeder_enabled);
+            break;       
           default:
             // statements
             break;
         }
       }
       else if (x < 800){
-        // Select button - start/stop
-        lcd.print ("Select");
+        // Select button - start/stop        
+        feeder_mode = FEEDER_ON;        
+        // On mode display 
+        lcd.setCursor(0,1);
+        lcd.print ("Start!");
+        return;
       }
+
+      // Handle the new display
+      lcd.setCursor(0,1);
+      switch (menu_place_id) {
+          case MENU_REQ_VELOCITY:
+            lcd.print ("Vel = ");
+            lcd.print (req_velocity);
+            lcd.print (" cm/s");
+            break;
+          case MENU_OPEN_ANGLE:
+            lcd.print ("Open = ");
+            lcd.print (open_angle);
+            lcd.print (" deg");
+            break;
+          case MENU_CLOSE_ANGLE:
+            lcd.print ("Close = ");
+            lcd.print (close_angle);
+            lcd.print (" deg");
+            break;
+          case MENU_SERVO_DELAY:
+            lcd.print ("Delay = ");
+            lcd.print (servo_delay);
+            lcd.print (" ms");
+            break;
+          case MENU_HVLP_EN:
+            if (is_hvlp_enabled)
+              lcd.print("HVLP enabled");
+             else
+              lcd.print("HVLP disabled");
+            break;
+          case MENU_FEEDER_EN:
+            if (is_feeder_enabled)
+              lcd.print("Feeder enabled");
+             else
+              lcd.print("Feeder disabled");
+            break;       
+          default:
+            // statements
+            break;
+        }      
     }    
   }
+}
+
+/*******************************************************************************
+* Menu handler during On mode
+* Buttons:
+*           Up/Down/Right/Left/Select - transition to idle mode        
+*******************************************************************************/
+
+void menu_handler_on(int velocity)
+{
   
- 
-  /*
-  if (x < 100) 
+  //char my_str[16] = "Motor Vel =    "; // starts at 0  
+  int x;
+
+  //my_str[12] = '0';
+  //my_str[13] = '.';
+  //my_str[14] = '0';
+  
+  // Read buttons
+  x = analogRead (0);
+
+  // LCD
+  lcd.setCursor(0,0);
+  lcd.print ("Feeder On     ");
+  lcd.setCursor(0,1);
+  lcd.print ("Vel = ");
+  lcd.print (velocity);
+  lcd.print (" cm/s");
+    
+  if (x < 800)
   {
-    lcd.print ("Right ");
-    Serial.print("The value at pim A0 Right key pressed is  :");
-    Serial.println(x,DEC);
-    is_pressed = true;
+      // One of the buttons pressed  
+      is_pressed = true; 
   }
-  else if (x < 200) {
-    // Up button
-    menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
-    lcd.print (menu_place_id);
-    //lcd.print ("Up    ");
-    Serial.print("The value at pim A0 UP key pressed is  :");
-    Serial.println(x,DEC);
-    is_pressed = true;
-  }
-  
-  else if (x < 400){
-    // Down button
-    menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
-    lcd.print (menu_place_id);
-    //lcd.print ("Down  ");
-    Serial.print("The value at pim A0 Down key pressed is  :");
-    Serial.println(x,DEC);
-    is_pressed = true;
-  }
-  else if (x < 600){
-    lcd.print ("Left  ");
-    Serial.print("The value at pim A0 Left key pressed is  :");
-    Serial.println(x,DEC);
-    is_pressed = true;
-  }
-  else if (x < 800){
-    lcd.print ("Select");
-    Serial.print("The value at pim A0 Select key pressed is  :");
-    Serial.println(x,DEC);
-    is_pressed = true;
-  }
-  else {
-    is_pressed = false;
-  }
-  */
+
+  if ((is_pressed) && (x>=800))
+  {
+    //button released - return to idle
+    feeder_mode = FEEDER_IDLE;
+    print_idle_screen();
+   }  
+}
+
+void print_idle_screen()
+{  
+  lcd.setCursor(0,0); 
+  lcd.print("Setup params:");
+  lcd.setCursor(0,1);
+  lcd.print ("Vel = ");
+  lcd.print (req_velocity);
+  lcd.print (" cm/s");
 }
 
 /*******************************************************************************
