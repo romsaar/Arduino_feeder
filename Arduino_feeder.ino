@@ -20,7 +20,7 @@ void setup() {
   lcd.begin(16, 2);
   
   // Print a message to the LCD 
-  print_idle_screen(); 
+  //print_idle_screen(); 
   
   Serial.begin(9600);
  
@@ -44,8 +44,11 @@ void loop()
     tTime[0] = t;
   }  
 
-  // Handle GUI
+  // Handle the menu
   menu_handler();
+
+  // Update the LCD
+  update_screen(current_velocity);
   
   /*if (feeder_mode == FEEDER_IDLE)
     menu_handler_idle();
@@ -148,11 +151,8 @@ void menu_handler()
         }   
         break;
       case SELECT_BUTTON:
-        // Select button - start/stop        
-        feeder_mode = FEEDER_ON;        
-        // On mode display 
-        lcd.setCursor(0,1);
-        lcd.print ("Start!");        
+        // Select button - toggle feeder mode        
+        is_feeder_active = not(is_feeder_active);             
         break;          
       default:
         // statements
@@ -161,8 +161,32 @@ void menu_handler()
 
     // reset current button
     current_button = NO_BUTTON;    
+         
+  }
+}
 
-    // Handle the new display
+/*******************************************************************************
+* Update screen
+*******************************************************************************/
+
+void update_screen(int velocity)
+{
+    // upper row
+    lcd.setCursor(0,0);
+    if (is_feeder_active)
+    {
+      // Active feeder display
+      lcd.print ("Active ");
+      lcd.print (velocity);
+      lcd.print (" cm/s");
+    }
+    else
+    {
+      // Inactive feeder display
+      lcd.print ("Inactice      ");
+    }
+    
+    // lower row
     lcd.setCursor(0,1);
     switch (menu_place_id) {
         case MENU_REQ_VELOCITY:
@@ -200,59 +224,10 @@ void menu_handler()
         default:
           // statements
           break;
-      }       
-  }
+      }  
 }
 
 
-void menu_handler_on(int velocity)
-{
-  
-  //char my_str[16] = "Motor Vel =    "; // starts at 0  
-  int x;
-
-  //my_str[12] = '0';
-  //my_str[13] = '.';
-  //my_str[14] = '0';
-  
-  // Read buttons
-  x = analogRead (0);
-
-  // LCD
-  lcd.setCursor(0,0);
-  lcd.print ("Feeder On     ");
-  lcd.setCursor(0,1);
-  lcd.print ("Vel = ");
-  lcd.print (velocity);
-  lcd.print (" cm/s");
-    
-  if (x < 800)
-  {
-      // One of the buttons pressed  
-      is_pressed = true; 
-  }
-
-  if ((is_pressed) && (x>=800))
-  {
-    //button released - return to idle
-    feeder_mode = FEEDER_IDLE;
-    print_idle_screen();
-   }  
-}
-
-/*******************************************************************************
-* print idle screen
-*******************************************************************************/
-
-void print_idle_screen()
-{  
-  lcd.setCursor(0,0); 
-  lcd.print("Setup params:");
-  lcd.setCursor(0,1);
-  lcd.print ("Vel = ");
-  lcd.print (req_velocity);
-  lcd.print (" cm/s");
-}
 
 
 /*******************************************************************************

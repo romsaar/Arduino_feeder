@@ -51,8 +51,8 @@
 #define SELECT_BUTTON            5
 
 // Feeder modes
-#define FEEDER_IDLE              0
-#define FEEDER_ON                1
+//#define FEEDER_IDLE              0
+//#define FEEDER_ON                1
 
 /*******************************************************************************
 * SoftwareTimer
@@ -82,6 +82,7 @@ void print_idle_screen(void);
 void print_on_screen(void); 
 void get_button(void);
 void menu_handler(void);
+void update_screen(int);
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -117,7 +118,7 @@ int32_t hvlp_open_angle = HVLP_CLOSE_POS;
 /*******************************************************************************
 * Declaration for jig parameters
 *******************************************************************************/
-int feeder_mode = FEEDER_IDLE;      // Feeder starts in idle mode
+bool is_feeder_active = false;      // Feeder starts inactive
 int req_velocity = 20;              // required feeder velocity [cm/sec]
 int open_angle = HVLP_OPEN_POS;     // HVLP active position
 int close_angle = HVLP_CLOSE_POS;   // HVLP idle position
