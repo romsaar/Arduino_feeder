@@ -55,16 +55,18 @@ void loop()
 /*******************************************************************************
 * Menu handler during idle mode
 * Buttons:
-*           Up - scrolls up the menu
-*           Down - scrolls down the menu
-*           Right - increment current menu place
-*           Left - decrement current menu place
+*           Right - scrolls right the menu
+*           Left - scrolls left the menu
+*           Up - increment current menu place
+*           Down - decrement current menu place
 *           Select - transiotion to On mode           
 * Menu places: 
 *           0=required velocity
 *           1=Open angle
 *           2=Close angle
 *           3=servo_delay
+*           4=HVLP enable
+*           5=Feeder enable
 *******************************************************************************/
 
 void menu_handler_idle()
@@ -95,8 +97,14 @@ void menu_handler_idle()
 
       // Pressed button logic
       if (x < 100) {
-        // Right button - increase the relevant menu place value
-        //lcd.print ("Right ");  
+        // Right button - update the menu place
+        //lcd.print ("Right ");
+        menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
+        //lcd.print(menu_place_id);
+        
+      } 
+      else if (x < 200) {
+        // Up button - increase/toggle the relevant menu place value
         switch (menu_place_id) {
           case MENU_REQ_VELOCITY:
             req_velocity = min(req_velocity+REQ_VEL_STEP, MAX_REQ_VEL);
@@ -119,22 +127,10 @@ void menu_handler_idle()
           default:
             // statements
             break;
-        }
-      } 
-      else if (x < 200) {
-        // Up button - update the menu place
-        menu_place_id = (menu_place_id+1) % MAX_MENU_PLACES;
-        //lcd.print(menu_place_id);
+        }        
       }      
       else if (x < 400){
-        // Down button- update the menu place
-        menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
-        if (menu_place_id<0)
-          menu_place_id += MAX_MENU_PLACES;
-        //lcd.print (menu_place_id);
-      }
-      else if (x < 600){
-        // Left button - decrease the relevant menu place value
+        // Down button - decrease/toggle the relevant menu place value  
         switch (menu_place_id) {
           case MENU_REQ_VELOCITY:
             req_velocity = max(req_velocity-REQ_VEL_STEP, 0);
@@ -157,7 +153,14 @@ void menu_handler_idle()
           default:
             // statements
             break;
-        }
+        }   
+      }
+      else if (x < 600){
+        // Left button - update the menu place
+        menu_place_id = (menu_place_id-1) % MAX_MENU_PLACES;
+        if (menu_place_id<0)
+          menu_place_id += MAX_MENU_PLACES;
+        //lcd.print (menu_place_id);
       }
       else if (x < 800){
         // Select button - start/stop        
