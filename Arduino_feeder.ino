@@ -39,7 +39,7 @@ void loop()
     // Poll motor odometry
     current_velocity = calculateVelocity();
     
-    motor_control();    
+    motor_control(req_velocity, int(current_velocity));    
     tTime[0] = t;
   }  
 
@@ -273,19 +273,41 @@ void get_button()
   }
 }
 
-void motor_control()
+void motor_control(int required_velocity, int current_velocity)
 {
+
+  static int required_pwm = 0;
+  int delta_pwm = 0;
 
   if (is_feeder_active)
   {
-    // Setup motor PWM
-    analogWrite(MOTOR_PWMF,120); 
+    // P controller
+    delta_pwm = (required_velocity - current_velocity) * 1;
+
+    // Limit max pwm change
+    if (delta_pwm > 20)
+      delta_pwm = 20;
+    else if (delta_pwm < -20)
+      delta_pwm = -20;
+
+    // update the pwm
+    required_pwm += delta_pwm;
+         
   }
   else
   {
-    // Setup motor PWM
-    analogWrite(MOTOR_PWMF,0); 
+    // Force PWM = 0;
+    required_pwm -= 10;    
   }
+
+  // Limit the actual pwm to be applied
+  if (required_pwm>254)
+    required_pwm = 254;
+  else if (required_pwm<0)
+    required_pwm=0;
+
+  // Update the PWM
+  analogWrite(MOTOR_PWMF,required_pwm); 
 }
 
 /*******************************************************************************

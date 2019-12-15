@@ -84,7 +84,7 @@ void print_on_screen(void);
 void get_button(void);
 void menu_handler(void);
 void update_screen(int);
-void motor_control(void);    
+void motor_control(int, int);    
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -118,7 +118,7 @@ int32_t hvlp_open_angle = HVLP_CLOSE_POS;
 * Declaration for jig parameters
 *******************************************************************************/
 bool is_feeder_active = false;      // Feeder starts inactive
-int req_velocity = 20;              // required feeder velocity [cm/sec]
+int req_velocity = 15;              // required feeder velocity [cm/sec]
 int open_angle = HVLP_OPEN_POS;     // HVLP active position
 int close_angle = HVLP_CLOSE_POS;   // HVLP idle position
 int servo_delay = 1000;             // wait 1000ms brfore activating the HVLP
