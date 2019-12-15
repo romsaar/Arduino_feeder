@@ -4,7 +4,7 @@ void setup() {
 
    // setup right wheel pins 
   //pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 1 an input (odometry)  
-  attachInterrupt(digitalPinToInterrupt(MOTOR_ODOMETRY), odo_ISR, CHANGE); 
+  attachInterrupt(digitalPinToInterrupt(MOTOR_ODOMETRY), odo_ISR, RISING); 
      
   pinMode(MOTOR_PWMF,OUTPUT); // make pin 11 an output (PWM forward)
   pinMode(MOTOR_PWMR,OUTPUT); // make pin 3 an output (PWM reverse)
@@ -34,13 +34,8 @@ void loop()
   float current_velocity = 0.0;
 
   // Poll motor odometry
-  //current_velocity = calculateVelocity();
-  if (is_feeder_active)
-  {
-    motor_rpm = int(long(60*1000)/time_for_rotation);
-    Serial.println(time_for_rotation);
-  }
-
+  current_velocity = calculateVelocity();
+  
   // Call RPM controller
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
   {  
@@ -169,14 +164,14 @@ void menu_handler()
 * Loop function
 *******************************************************************************/
 
-void update_screen(int velocity)
+void update_screen(float velocity)
 {
     // upper row
     lcd.setCursor(0,0);
     if (is_feeder_active)
     {
       // Active feeder display
-      lcd.print ("Active ");
+      lcd.print ("Active ");      
       lcd.print (velocity);
       lcd.print (" cm/s");
     }
@@ -299,6 +294,9 @@ void motor_control()
 
 void odo_ISR()
 {
+  static unsigned long prev_time = 0;
+  static volatile int rotation; // variale for interrupt function - must be volatile!
+  
   odo_intr++;delay(10);
   dTime = millis(); 
   rotation++;
@@ -324,6 +322,30 @@ void odo_ISR()
 *******************************************************************************/ 
 
 float calculateVelocity()
+{ 
+
+  float rpm_float;
+  float motor_velocity_float;
+  int motor_velocity_10;
+  
+  if (is_feeder_active)
+  {
+    rpm_float = ((60000)/time_for_rotation)/GEAR_RATIO;
+    motor_rpm = int(rpm_float);
+    motor_velocity_float = ((rpm_float * 2 * 3.12415 * DIAMETER)/10)/60;   
+    motor_velocity_10 = int(motor_velocity_float*10);
+    motor_velocity_float = float(motor_velocity_10)/10;
+    //Serial.println(time_for_rotation);
+    //Serial.print("RPM= ");
+    //Serial.println(motor_rpm);
+    return motor_velocity_float;
+  }
+  else
+    return 0;
+}
+
+/*
+float calculateVelocity()
 {  
 
   unsigned long current_time;
@@ -336,11 +358,6 @@ float calculateVelocity()
   // Poll the motor odometry pin 
   odometer_val= digitalRead(MOTOR_ODOMETRY);
   current_time = millis();
-
-  //lcd.setCursor(10,0);
-  //lcd.print("  ");
-  //lcd.setCursor(10,0);
-  //lcd.print(odometer_val);  
   
   // Detect tranbsition and update odometry counter
   if(odometer_val==0 && prev_odometer_val== 1 )  //the point where high goes to low(end of the pulse) 
@@ -368,15 +385,15 @@ float calculateVelocity()
     Serial.println(time_diff);    
     
     
-    /*Serial.print("rpm: ");
+    Serial.print("rpm: ");
     Serial.println(motor_rpm);    
     Serial.print("mm/s of right wheel:");
-    Serial.println(motor_velocity);*/
+    Serial.println(motor_velocity);
     
   } 
 
   return motor_velocity;
-}
+}*/
 
 /*int calculateDistance(int pulses)
 {

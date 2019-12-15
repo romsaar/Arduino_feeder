@@ -97,15 +97,12 @@ int current_button = NO_BUTTON;
 bool is_pressed = false;            // remove this parameter !!!!!!!!!!!!!!!!!!!!!!
 
 /*******************************************************************************
-* Declaration for velocity measurement
+* Declaration for velocity ISR measurement
 *******************************************************************************/
 int odo_intr = 0;
 int motor_rpm=0;
-float motor_velocity = 0;
 float dTime = 0;
-volatile int rotation; // variale for interrupt function - must be volatile!
-float time_for_rotation;
-unsigned long prev_time = 0;
+int time_for_rotation;
 
 /*******************************************************************************
 * Declaration for HVLP servo
