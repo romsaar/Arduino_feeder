@@ -3,24 +3,22 @@
 void setup() {
 
    // setup right wheel pins 
-  pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 1 an input (odometry)  
-  //digitalWrite(MOTOR_ODOMETRY, INPUT_PULLDOWN); // Configure odometry as pull_down
+  //pinMode(MOTOR_ODOMETRY, INPUT);  // make pin 1 an input (odometry)  
+  attachInterrupt(digitalPinToInterrupt(MOTOR_ODOMETRY), odo_ISR, CHANGE); 
+     
   pinMode(MOTOR_PWMF,OUTPUT); // make pin 11 an output (PWM forward)
   pinMode(MOTOR_PWMR,OUTPUT); // make pin 3 an output (PWM reverse)
-     
+       
   Serial.begin(9600);
   
-  //set PWM frequency to 3906 Hz for pin 3 (and 11)
+  //set PWM frequency to 31KHz for pin 3 (and 11)
   TCCR2B=(TCCR2B&0xF8) | 1; 
 
   // Setup motor PWM
-  analogWrite(MOTOR_PWMF,120); //do 50% PWM on pin 11 at the frequency set in TCCR2B(right wheel) 
+  //analogWrite(MOTOR_PWMF,120); //do 50% PWM on pin 11 at the frequency set in TCCR2B(right wheel) 
 
   // Setup the LCD  
   lcd.begin(16, 2);
-  
-  // Print a message to the LCD 
-  //print_idle_screen(); 
   
   Serial.begin(9600);
  
@@ -36,11 +34,17 @@ void loop()
   float current_velocity = 0.0;
 
   // Poll motor odometry
-  current_velocity = calculateVelocity();
+  //current_velocity = calculateVelocity();
+  if (is_feeder_active)
+  {
+    motor_rpm = int(long(60*1000)/time_for_rotation);
+    Serial.println(time_for_rotation);
+  }
 
   // Call RPM controller
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
-  {      
+  {  
+    motor_control();    
     tTime[0] = t;
   }  
 
@@ -49,13 +53,9 @@ void loop()
 
   // Update the LCD
   update_screen(current_velocity);
-  
-  /*if (feeder_mode == FEEDER_IDLE)
-    menu_handler_idle();
-  else
-    menu_handler_on(int(current_velocity));     */
-  
+   
 }
+
 
 /*******************************************************************************
 * Menu handler
@@ -166,7 +166,7 @@ void menu_handler()
 }
 
 /*******************************************************************************
-* Update screen
+* Loop function
 *******************************************************************************/
 
 void update_screen(int velocity)
@@ -228,8 +228,6 @@ void update_screen(int velocity)
 }
 
 
-
-
 /*******************************************************************************
 * Get button
 *   Indicates if a new button was pressed (right after the button was released)
@@ -280,6 +278,46 @@ void get_button()
   }
 }
 
+void motor_control()
+{
+
+  if (is_feeder_active)
+  {
+    // Setup motor PWM
+    analogWrite(MOTOR_PWMF,120); 
+  }
+  else
+  {
+    // Setup motor PWM
+    analogWrite(MOTOR_PWMF,0); 
+  }
+}
+
+/*******************************************************************************
+* Odometry ISR
+*******************************************************************************/
+
+void odo_ISR()
+{
+  odo_intr++;delay(10);
+  dTime = millis(); 
+  rotation++;
+  if(rotation>=TICKS_FOR_ROTATION)
+  {
+    time_for_rotation = (millis()-prev_time); //time_for_rotation in millisec     
+    prev_time = millis();
+    rotation=0;
+  }
+}
+
+/*******************************************************************************
+* Left Odometry ISR
+*******************************************************************************/
+
+/*void Left_ISR()
+{
+  left_intr++;delay(10);
+}*/
 
 /*******************************************************************************
 * Calculate Velocity
@@ -288,40 +326,53 @@ void get_button()
 float calculateVelocity()
 {  
 
-  float current_time;
-  float time_diff; 
+  unsigned long current_time;
+  unsigned int time_diff;
+  int odometer_val = 0;
+  int static prev_odometer_val = 0;
+  int static motor_odo_counter = 0;
+  float static motor_prev_time =0; 
   
   // Poll the motor odometry pin 
-  motor_pulses= digitalRead(MOTOR_ODOMETRY);
+  odometer_val= digitalRead(MOTOR_ODOMETRY);
   current_time = millis();
+
+  //lcd.setCursor(10,0);
+  //lcd.print("  ");
+  //lcd.setCursor(10,0);
+  //lcd.print(odometer_val);  
   
   // Detect tranbsition and update odometry counter
-  if(motor_pulses==0 && prev_motor_pulses== 1 )  //the point where high goes to low(end of the pulse) 
+  if(odometer_val==0 && prev_odometer_val== 1 )  //the point where high goes to low(end of the pulse) 
   {
+    // Count a new pulse (signal transition from 1 to 0)
     motor_odo_counter = motor_odo_counter + 1;
-    //Serial.print(motor_odo_counter);
+    Serial.println(motor_odo_counter);
+    lcd.setCursor(10,0);   
   }
   // Update prev motor pulses
-  prev_motor_pulses=motor_pulses;
-
+  prev_odometer_val=odometer_val;  
   
-  
-  if(motor_odo_counter>=82)
+  if(motor_odo_counter>=2)
   {    
     // Calculate RPM & speed
-    time_diff = current_time-motor_prev_time; //time difference in millisec 
-    motor_rpm = (1000/time_diff)*60; 
-    motor_velocity = (motor_rpm/60)*150*3.1415; 
+    time_diff = int(current_time-motor_prev_time); //time difference in millisec 
+    motor_rpm = int(long(60*1000)/time_diff); 
+    motor_velocity = (float(motor_rpm)*150*3.1415)/60; 
 
     // Init for next time
     motor_prev_time = current_time;
     motor_odo_counter=0;
+
+    Serial.print("time diff: ");
+    Serial.println(time_diff);    
+    
     
     /*Serial.print("rpm: ");
     Serial.println(motor_rpm);    
     Serial.print("mm/s of right wheel:");
-    Serial.println(motor_velocity);
-    */
+    Serial.println(motor_velocity);*/
+    
   } 
 
   return motor_velocity;

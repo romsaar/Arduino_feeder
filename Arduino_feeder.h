@@ -67,13 +67,14 @@ static uint32_t tTime[10];
 #define LCD_D6        6
 #define LCD_D7        7
 
-#define MOTOR_ODOMETRY 1
-#define MOTOR_PWMF 11
-#define MOTOR_PWMR 3
+#define MOTOR_ODOMETRY        2
+#define MOTOR_PWMF            11
+#define MOTOR_PWMR            3
 
-//#define GEAR_RATIO  82
-//#define DIAMETER 150
-//#define PULSES_2_MM (DIAMETER * 3.1415) / GEAR_RATIO
+#define GEAR_RATIO            60 //82
+#define PPR                   5  //1
+#define DIAMETER              85 //150
+#define TICKS_FOR_ROTATION    (GEAR_RATIO*PPR)
 
 // Function prototypes
 float calculateVelocity(void);
@@ -83,6 +84,7 @@ void print_on_screen(void);
 void get_button(void);
 void menu_handler(void);
 void update_screen(int);
+void motor_control(void);    
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -97,13 +99,13 @@ bool is_pressed = false;            // remove this parameter !!!!!!!!!!!!!!!!!!!
 /*******************************************************************************
 * Declaration for velocity measurement
 *******************************************************************************/
-int motor_pulses = 0;
-int prev_motor_pulses = 0;
-int motor_odo_counter = 0;
-float motor_prev_time =0;
-float motor_time_taken=0;
-float motor_rpm=0;
+int odo_intr = 0;
+int motor_rpm=0;
 float motor_velocity = 0;
+float dTime = 0;
+volatile int rotation; // variale for interrupt function - must be volatile!
+float time_for_rotation;
+unsigned long prev_time = 0;
 
 /*******************************************************************************
 * Declaration for HVLP servo
