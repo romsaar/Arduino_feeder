@@ -31,14 +31,14 @@ void setup() {
 void loop() 
 {
   uint32_t t = millis();
-  float current_velocity = 0.0;
-
-  // Poll motor odometry
-  current_velocity = calculateVelocity();
+  float current_velocity = 0.0; 
   
   // Call RPM controller
   if ((t-tTime[0]) >= (1000 / CONTROL_MOTOR_SPEED_FREQUENCY))
   {  
+    // Poll motor odometry
+    current_velocity = calculateVelocity();
+    
     motor_control();    
     tTime[0] = t;
   }  
@@ -173,12 +173,12 @@ void update_screen(float velocity)
       // Active feeder display
       lcd.print ("Active ");      
       lcd.print (velocity);
-      lcd.print (" cm/s");
+      lcd.print ("cm/s");
     }
     else
     {
       // Inactive feeder display
-      lcd.print ("Inactice      ");
+      lcd.print ("Inactice        ");
     }
     
     // lower row
@@ -187,22 +187,22 @@ void update_screen(float velocity)
         case MENU_REQ_VELOCITY:
           lcd.print ("Vel = ");
           lcd.print (req_velocity);
-          lcd.print (" cm/s");
+          lcd.print ("cm/s");
           break;
         case MENU_OPEN_ANGLE:
           lcd.print ("Open = ");
           lcd.print (open_angle);
-          lcd.print (" deg");
+          lcd.print ("deg");
           break;
         case MENU_CLOSE_ANGLE:
           lcd.print ("Close = ");
           lcd.print (close_angle);
-          lcd.print (" deg");
+          lcd.print ("deg");
           break;
         case MENU_SERVO_DELAY:
           lcd.print ("Delay = ");
           lcd.print (servo_delay);
-          lcd.print (" ms");
+          lcd.print ("ms");
           break;
         case MENU_HVLP_EN:
           if (is_hvlp_enabled)
@@ -298,13 +298,17 @@ void odo_ISR()
   static volatile int rotation; // variale for interrupt function - must be volatile!
   
   odo_intr++;delay(10);
-  dTime = millis(); 
+  dTime = millis();  
   rotation++;
   if(rotation>=TICKS_FOR_ROTATION)
   {
-    time_for_rotation = (millis()-prev_time); //time_for_rotation in millisec     
-    prev_time = millis();
+    time_for_rotation = (micros()-prev_time); //time_for_rotation in millisec     
+    prev_time = micros();
     rotation=0;
+
+    //time_for_rotation = (millis()-prev_time); //time_for_rotation in millisec     
+    //prev_time = millis();
+    //rotation=0;
   }
 }
 
@@ -330,14 +334,13 @@ float calculateVelocity()
   
   if (is_feeder_active)
   {
-    rpm_float = ((60000)/time_for_rotation)/GEAR_RATIO;
-    motor_rpm = int(rpm_float);
-    motor_velocity_float = ((rpm_float * 2 * 3.12415 * DIAMETER)/10)/60;   
-    motor_velocity_10 = int(motor_velocity_float*10);
-    motor_velocity_float = float(motor_velocity_10)/10;
+    //rpm_float = ((60000)/time_for_rotation)/GEAR_RATIO; // time_for_rotation in ms
+    rpm_float = (float(60000000)/time_for_rotation)/float(GEAR_RATIO); // time_for_rotation in us    
+    motor_velocity_float = ((rpm_float * 2 * 3.12415 * DIAMETER)/10)/60;      
     //Serial.println(time_for_rotation);
-    //Serial.print("RPM= ");
-    //Serial.println(motor_rpm);
+    //Serial.print("float RPM= ");
+    //Serial.println(rpm_float);
+    motor_rpm = int(rpm_float); 
     return motor_velocity_float;
   }
   else

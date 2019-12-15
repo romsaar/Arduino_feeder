@@ -102,7 +102,7 @@ bool is_pressed = false;            // remove this parameter !!!!!!!!!!!!!!!!!!!
 int odo_intr = 0;
 int motor_rpm=0;
 float dTime = 0;
-int time_for_rotation;
+unsigned long time_for_rotation;
 
 /*******************************************************************************
 * Declaration for HVLP servo
