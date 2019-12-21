@@ -4,6 +4,7 @@
 * 
 **********************************************************************/
 
+#include "odometry.h"
 
 //#ifndef FEEDER_CONFIG_H_
 #define FEEDER_CONFIG_H_
@@ -14,6 +15,9 @@
 
 // Firmware version
 #define FIRMWARE_VER "0.0.1"
+
+#define OPT_TIME_ISR_
+#define DIRECT_MOTOR_
 
 // Tasks frequencies
 #define CONTROL_MOTOR_SPEED_FREQUENCY          50   //hz
@@ -50,10 +54,6 @@
 #define DOWN_BUTTON              4
 #define SELECT_BUTTON            5
 
-// Feeder modes
-//#define FEEDER_IDLE              0
-//#define FEEDER_ON                1
-
 /*******************************************************************************
 * SoftwareTimer
 *******************************************************************************/
@@ -67,14 +67,10 @@ static uint32_t tTime[10];
 #define LCD_D6        6
 #define LCD_D7        7
 
-#define MOTOR_ODOMETRY        2
-#define MOTOR_PWMF            11
-#define MOTOR_PWMR            3
-
-#define GEAR_RATIO            60 //82
-#define PPR                   5  //1
-#define DIAMETER              85 //150
-#define TICKS_FOR_ROTATION    (GEAR_RATIO*PPR)
+// Control
+#define MAX_PWM_CHANGE       20
+#define MAX_PWM              254
+#define MIN_PWM              0
 
 // Function prototypes
 float calculateVelocity(void);
@@ -84,7 +80,9 @@ void print_on_screen(void);
 void get_button(void);
 void menu_handler(void);
 void update_screen(int);
-void motor_control(int, int);    
+void motor_control(int, int); 
+float calculate_velocity_opt(float);
+void odo_ISR_opt(void);   
 
 /*******************************************************************************
 * Declaration for GUI & menu
@@ -97,12 +95,10 @@ int current_button = NO_BUTTON;
 bool is_pressed = false;            // remove this parameter !!!!!!!!!!!!!!!!!!!!!!
 
 /*******************************************************************************
-* Declaration for velocity ISR measurement
+* Declaration for time optimized velocity ISR measurement
 *******************************************************************************/
-int odo_intr = 0;
-int motor_rpm=0;
-float dTime = 0;
-unsigned long time_for_rotation;
+volatile unsigned long odo_ticks = 0;
+volatile unsigned long odo_time_us = 0;
 
 /*******************************************************************************
 * Declaration for HVLP servo
@@ -124,3 +120,15 @@ int close_angle = HVLP_CLOSE_POS;   // HVLP idle position
 int servo_delay = 1000;             // wait 1000ms brfore activating the HVLP
 bool is_feeder_enabled = true;      // Feeder is enabled 
 bool is_hvlp_enabled = true;        // HVLP is enabled
+
+/*******************************************************************************
+* Declaration for velocity ISR measurement
+*******************************************************************************/
+int odo_intr = 0;
+int motor_rpm=0;
+float dTime = 0;
+unsigned long time_for_rotation;
+
+/*******************************************************************************
+* Declaration for motor controller
+*******************************************************************************/
